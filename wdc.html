@@ -1,0 +1,55 @@
+<html>
+<head>
+  <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
+  <script>
+    (function () {
+      var myConnector = tableau.makeConnector();
+
+      // schema (डेटा का structure बताएगा)
+      myConnector.getSchema = function (schemaCallback) {
+        var cols = [
+          { id: "BookingID", dataType: tableau.dataTypeEnum.string },
+          { id: "VisitDate", dataType: tableau.dataTypeEnum.string },
+          { id: "Amount", dataType: tableau.dataTypeEnum.float }
+        ];
+
+        var tableSchema = {
+          id: "BookingsAPI",
+          alias: "Live Booking Data",
+          columns: cols
+        };
+
+        schemaCallback([tableSchema]);
+      };
+
+      // डेटा को API से लाएं
+      myConnector.getData = function (table, doneCallback) {
+        fetch("https://api.company.com/bookings", {
+          headers: {
+            "Authorization": "Bearer आपकी_API_KEY_यहां_डालें"  // या X-API-Key
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          let tableData = data.map(item => ({
+            BookingID: item["Booking ID"],
+            VisitDate: item["Visit Date"],
+            Amount: item["Total Amount (INR)"]
+          }));
+          table.appendRows(tableData);
+          doneCallback();
+        });
+      };
+
+      tableau.registerConnector(myConnector);
+    })();
+  </script>
+</head>
+
+<body>
+  <h3>Live API से डेटा लोड करें</h3>
+  <button onclick="tableau.connectionName = 'API से बुकिंग डेटा'; tableau.submit();">
+    Tableau में डेटा लोड करें
+  </button>
+</body>
+</html>
